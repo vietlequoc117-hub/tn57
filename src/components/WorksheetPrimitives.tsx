@@ -84,7 +84,7 @@ export const GradingSummaryBanner: React.FC<{
               </span>
               <span aria-hidden="true">·</span>
               <span>
-                Phần tự luận AI:{' '}
+                Phần tự luận:{' '}
                 <strong className="text-slate-900">
                   {formatScoreVi(result.essayEarnedPoints)} /{' '}
                   {formatScoreVi(result.essayMaxPoints)}đ
@@ -125,7 +125,7 @@ export const EssayFeedbackCard: React.FC<{ feedback?: EssayItemFeedback }> = ({ 
       }`}
     >
       <div className="flex items-center justify-between gap-2 font-semibold">
-        <span>Chấm tự luận: {feedback.title}</span>
+        <span>Chấm đáp án: {feedback.title}</span>
         <span className="font-mono-math tabular-nums">
           {formatScoreVi(feedback.earnedPoints)} / {formatScoreVi(feedback.maxPoints)} điểm
         </span>

@@ -426,7 +426,7 @@ export const Grade7ExamView: React.FC<Grade7ExamViewProps> = ({
       <section className="space-y-5">
         <SectionHeader
           title="B. TỰ LUẬN (3,0 điểm)"
-          subtitle="Trình bày lời giải và kết quả từ Bài 1 đến Bài 3. Có thể nhập phân số dưới dạng a/b (VD: 3/5, 1/6)."
+          subtitle="Nhập kết quả hoặc kết luận ngắn gọn từ Bài 1 đến Bài 3 (không cần trình bày lời giải chi tiết). Có thể nhập phân số dạng a/b (VD: 3/5, -1/2)."
         />
 
         {/* Bài 1 (1,0 điểm) */}
@@ -463,39 +463,24 @@ export const Grade7ExamView: React.FC<Grade7ExamViewProps> = ({
                 >
                   <div className="text-sm font-bold text-sky-900">Câu {part.label})</div>
                   {isPractice ? (
-                    <>
-                      <textarea
-                        rows={4}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold whitespace-nowrap">
+                        Kết quả {part.label} =
+                      </span>
+                      <input
+                        type="text"
                         disabled={isLocked}
-                        value={answers.bai1Work[part.label] ?? ''}
+                        value={answers.bai1Result[part.label] ?? ''}
                         onChange={(e) =>
                           onChangeAnswers((prev) => ({
                             ...prev,
-                            bai1Work: { ...prev.bai1Work, [part.label]: e.target.value },
+                            bai1Result: { ...prev.bai1Result, [part.label]: e.target.value },
                           }))
                         }
-                        placeholder={`Trình bày bước làm câu ${part.label})...`}
-                        className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        placeholder="Nhập đáp số..."
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold whitespace-nowrap">
-                          Kết quả {part.label} =
-                        </span>
-                        <input
-                          type="text"
-                          disabled={isLocked}
-                          value={answers.bai1Result[part.label] ?? ''}
-                          onChange={(e) =>
-                            onChangeAnswers((prev) => ({
-                              ...prev,
-                              bai1Result: { ...prev.bai1Result, [part.label]: e.target.value },
-                            }))
-                          }
-                          placeholder="Đáp số..."
-                          className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
-                        />
-                      </div>
-                    </>
+                    </div>
                   ) : isWorksheet ? (
                     <>
                       <DottedLines count={4} />
@@ -546,25 +531,29 @@ export const Grade7ExamView: React.FC<Grade7ExamViewProps> = ({
           </div>
 
           <div className="rounded-xl border border-slate-300 bg-slate-50/40 p-4 space-y-3">
-            <div className="text-center font-bold underline underline-offset-4">Bài giải</div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {exam.part4Essay.bai2.parts.map((part) => (
                 <div key={part.label} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
                   <div className="text-sm font-bold text-sky-900">Ý {part.label})</div>
                   {isPractice ? (
-                    <textarea
-                      rows={4}
-                      disabled={isLocked}
-                      value={answers.bai2Work[part.label] ?? ''}
-                      onChange={(e) =>
-                        onChangeAnswers((prev) => ({
-                          ...prev,
-                          bai2Work: { ...prev.bai2Work, [part.label]: e.target.value },
-                        }))
-                      }
-                      placeholder={`Trình bày lập luận chứng minh / tính toán ý ${part.label})...`}
-                      className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-sky-500"
-                    />
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold text-slate-700 whitespace-nowrap">
+                        Kết luận / Đáp số:
+                      </span>
+                      <input
+                        type="text"
+                        disabled={isLocked}
+                        value={answers.bai2Work[part.label] ?? ''}
+                        onChange={(e) =>
+                          onChangeAnswers((prev) => ({
+                            ...prev,
+                            bai2Work: { ...prev.bai2Work, [part.label]: e.target.value },
+                          }))
+                        }
+                        placeholder="VD: 120° hoặc ABM = ACM..."
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
                   ) : isWorksheet ? (
                     <DottedLines count={4} />
                   ) : (
@@ -598,48 +587,48 @@ export const Grade7ExamView: React.FC<Grade7ExamViewProps> = ({
           {exam.part4Essay.bai3.svg && <MathSvg svg={exam.part4Essay.bai3.svg} />}
 
           <div className="rounded-xl border border-slate-300 bg-slate-50/40 p-4 space-y-3">
-            <div className="text-center font-bold underline underline-offset-4">Bài giải</div>
-
             {isPractice ? (
-              <>
-                <textarea
-                  rows={5}
-                  disabled={isLocked}
-                  value={answers.bai3Work}
-                  onChange={(e) =>
-                    onChangeAnswers((prev) => ({ ...prev, bai3Work: e.target.value }))
-                  }
-                  placeholder="Trình bày lời giải bài toán thực tế..."
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-                {exam.part4Essay.bai3.conclusionPrompts.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                    {exam.part4Essay.bai3.conclusionPrompts.map((cp, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold text-slate-700 whitespace-nowrap">
-                          <MathRenderer text={cp.label} />
-                        </span>
-                        <input
-                          type="text"
-                          disabled={isLocked}
-                          value={answers.bai3Conclusions[idx] ?? ''}
-                          onChange={(e) =>
-                            onChangeAnswers((prev) => ({
-                              ...prev,
-                              bai3Conclusions: {
-                                ...prev.bai3Conclusions,
-                                [idx]: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder="..."
-                          className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
+              exam.part4Essay.bai3.conclusionPrompts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {exam.part4Essay.bai3.conclusionPrompts.map((cp, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold text-slate-700 whitespace-nowrap">
+                        <MathRenderer text={cp.label} />
+                      </span>
+                      <input
+                        type="text"
+                        disabled={isLocked}
+                        value={answers.bai3Conclusions[idx] ?? ''}
+                        onChange={(e) =>
+                          onChangeAnswers((prev) => ({
+                            ...prev,
+                            bai3Conclusions: {
+                              ...prev.bai3Conclusions,
+                              [idx]: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Nhập đáp số..."
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold text-slate-700 whitespace-nowrap">Đáp số:</span>
+                  <input
+                    type="text"
+                    disabled={isLocked}
+                    value={answers.bai3Work}
+                    onChange={(e) =>
+                      onChangeAnswers((prev) => ({ ...prev, bai3Work: e.target.value }))
+                    }
+                    placeholder="Nhập đáp số cuối cùng..."
+                    className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              )
             ) : isWorksheet ? (
               <>
                 <DottedLines count={5} />

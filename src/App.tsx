@@ -30,7 +30,9 @@ import type {
 import {
   createEmptyGrade5Answers,
   createEmptyGrade7Answers,
+  gradeGrade5EssayLocal,
   gradeGrade5Objective,
+  gradeGrade7EssayLocal,
   gradeGrade7Objective,
 } from './utils/grading.ts';
 import { formatDuration } from './utils/mathFormat.ts';
@@ -207,7 +209,15 @@ export default function App() {
         }),
       });
 
-      const payload = (await response.json()) as { exam?: ExamData; error?: string };
+      const rawText = await response.text();
+      let payload: { exam?: ExamData; error?: string } = {};
+      try {
+        payload = JSON.parse(rawText) as { exam?: ExamData; error?: string };
+      } catch {
+        throw new Error(
+          'Máy chủ AI hiện không khả dụng trên môi trường này. Bạn vẫn có thể luyện toàn bộ 70 đề tạo sẵn (0 lượt API).',
+        );
+      }
       if (!response.ok || !payload.exam) {
         throw new Error(payload.error || 'Không thể tạo đề thi lúc này.');
       }
@@ -236,76 +246,10 @@ export default function App() {
           ? gradeGrade5Objective(exam, grade5Answers)
           : gradeGrade7Objective(exam, grade7Answers);
 
-      const hasAnyEssayInput =
+      const essayResult: EssayGradingResponse =
         exam.grade === 5
-          ? [
-              ...Object.values(grade5Answers.q2aWork),
-              ...Object.values(grade5Answers.q2aResult),
-              ...Object.values(grade5Answers.q2bWork),
-              ...Object.values(grade5Answers.q2bResult),
-              grade5Answers.q3.a,
-              grade5Answers.q3.b,
-              grade5Answers.q4Work,
-              grade5Answers.q4Answer,
-              grade5Answers.q5Work,
-              grade5Answers.q5Answer,
-            ].some((val) => String(val ?? '').trim().length > 0)
-          : [
-              grade7Answers.bai1Work.a,
-              grade7Answers.bai1Work.b,
-              grade7Answers.bai1Result.a,
-              grade7Answers.bai1Result.b,
-              grade7Answers.bai2Work.a,
-              grade7Answers.bai2Work.b,
-              grade7Answers.bai3Work,
-              ...Object.values(grade7Answers.bai3Conclusions),
-            ].some((val) => String(val ?? '').trim().length > 0);
-
-      let essayResult: EssayGradingResponse;
-
-      if (!hasAnyEssayInput) {
-        essayResult =
-          exam.grade === 5
-            ? {
-                essayEarnedPoints: 0,
-                essayMaxPoints: 5,
-                overallComment:
-                  'Phần tự luận chưa có bài làm nên hệ thống tự động chấm 0 điểm.',
-                items: [
-                  { itemId: 'q2a', title: 'Câu 2a (Đặt tính rồi tính)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'q2b', title: 'Câu 2b (Tính thuận tiện)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'q3', title: 'Câu 3 (Đọc bảng/biểu đồ hoặc quy đổi)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'q4', title: 'Câu 4 (Bài toán có lời văn)', earnedPoints: 0, maxPoints: 1.5, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'q5', title: 'Câu 5 (Vận dụng nâng cao)', earnedPoints: 0, maxPoints: 0.5, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                ],
-              }
-            : {
-                essayEarnedPoints: 0,
-                essayMaxPoints: 3,
-                overallComment:
-                  'Phần tự luận chưa có bài làm nên hệ thống tự động chấm 0 điểm.',
-                items: [
-                  { itemId: 'bai1', title: 'Bài 1 (Đại số)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'bai2', title: 'Bài 2 (Hình học / Thống kê)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                  { itemId: 'bai3', title: 'Bài 3 (Vận dụng thực tế)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
-                ],
-              };
-      } else {
-        const response = await fetch('/api/grade-essay', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            exam,
-            studentAnswers: exam.grade === 5 ? grade5Answers : grade7Answers,
-          }),
-        });
-
-        const payload = (await response.json()) as EssayGradingResponse & { error?: string };
-        if (!response.ok || !Array.isArray(payload.items)) {
-          throw new Error(payload.error || 'Không thể chấm phần tự luận bằng AI.');
-        }
-        essayResult = payload;
-      }
+          ? gradeGrade5EssayLocal(exam, grade5Answers)
+          : gradeGrade7EssayLocal(exam, grade7Answers);
 
       const totalScore = Math.min(
         10,
@@ -561,7 +505,7 @@ export default function App() {
                 </p>
                 <p className="text-xs text-slate-500 pt-1">
                   Mức độ: {level === 'advanced' ? 'Nâng cao (Khá - Giỏi)' : 'Chuẩn SGK'} · Chấm
-                  điểm tự động phần Trắc nghiệm và hỗ trợ chấm bài Tự luận bằng AI.
+                  điểm tự động 100% theo đáp án chuẩn ngay trên trình duyệt.
                 </p>
               </div>
               <button
@@ -643,8 +587,8 @@ export default function App() {
               {mode === 'practice' && !gradingResult && (
                 <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
                   <p className="text-xs text-slate-500 max-w-lg">
-                    Khi nhấn nộp bài, hệ thống sẽ chấm chính xác phần Trắc nghiệm, Đúng/Sai, Trả lời
-                    ngắn và dùng AI chấm từng bước phần Tự luận theo thang điểm 0,25đ.
+                    Khi nhấn nộp bài, hệ thống sẽ tự động đối chiếu đáp án và chấm điểm chính xác
+                    toàn bộ bài làm ngay lập tức (không tốn lượt API).
                   </p>
                   <button
                     type="button"
@@ -655,7 +599,7 @@ export default function App() {
                     {isGrading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Đang chấm bài với AI...</span>
+                        <span>Đang chấm bài...</span>
                       </>
                     ) : (
                       <>

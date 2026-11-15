@@ -150,7 +150,10 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
 
       {/* II. ESSAY */}
       <section className="space-y-5">
-        <SectionHeader title="II. PHẦN TỰ LUẬN (6 điểm)" />
+        <SectionHeader
+          title="II. PHẦN TỰ LUẬN (6 điểm)"
+          subtitle="Nhập kết quả / đáp số cuối cùng từ Câu 1 đến Câu 5 (không cần trình bày cách làm):"
+        />
 
         {/* Câu 1 (1 điểm) */}
         <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 print-avoid-break">
@@ -240,39 +243,24 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
                     <MathRenderer text={item.expression} />
                   </div>
                   {isPractice ? (
-                    <>
-                      <textarea
-                        rows={4}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+                        Kết quả =
+                      </span>
+                      <input
+                        type="text"
                         disabled={isLocked}
-                        value={answers.q2aWork[item.id] ?? ''}
+                        value={answers.q2aResult[item.id] ?? ''}
                         onChange={(e) =>
                           onChangeAnswers((prev) => ({
                             ...prev,
-                            q2aWork: { ...prev.q2aWork, [item.id]: e.target.value },
+                            q2aResult: { ...prev.q2aResult, [item.id]: e.target.value },
                           }))
                         }
-                        placeholder="Trình bày các bước đặt tính / tính toán..."
-                        className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        placeholder="Nhập kết quả..."
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">
-                          Kết quả =
-                        </span>
-                        <input
-                          type="text"
-                          disabled={isLocked}
-                          value={answers.q2aResult[item.id] ?? ''}
-                          onChange={(e) =>
-                            onChangeAnswers((prev) => ({
-                              ...prev,
-                              q2aResult: { ...prev.q2aResult, [item.id]: e.target.value },
-                            }))
-                          }
-                          placeholder="Nhập kết quả..."
-                          className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
-                        />
-                      </div>
-                    </>
+                    </div>
                   ) : isWorksheet ? (
                     <>
                       <div className="h-28 rounded-lg border border-dashed border-slate-300 bg-white dotted-grid-paper" />
@@ -314,39 +302,24 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
                     <MathRenderer text={item.expression} />
                   </div>
                   {isPractice ? (
-                    <>
-                      <textarea
-                        rows={3}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+                        Kết quả =
+                      </span>
+                      <input
+                        type="text"
                         disabled={isLocked}
-                        value={answers.q2bWork[item.id] ?? ''}
+                        value={answers.q2bResult[item.id] ?? ''}
                         onChange={(e) =>
                           onChangeAnswers((prev) => ({
                             ...prev,
-                            q2bWork: { ...prev.q2bWork, [item.id]: e.target.value },
+                            q2bResult: { ...prev.q2bResult, [item.id]: e.target.value },
                           }))
                         }
-                        placeholder="Viết từng bước tính thuận tiện..."
-                        className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        placeholder="Nhập kết quả..."
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">
-                          Kết quả =
-                        </span>
-                        <input
-                          type="text"
-                          disabled={isLocked}
-                          value={answers.q2bResult[item.id] ?? ''}
-                          onChange={(e) =>
-                            onChangeAnswers((prev) => ({
-                              ...prev,
-                              q2bResult: { ...prev.q2bResult, [item.id]: e.target.value },
-                            }))
-                          }
-                          placeholder="Nhập kết quả..."
-                          className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
-                        />
-                      </div>
-                    </>
+                    </div>
                   ) : isWorksheet ? (
                     <>
                       <DottedLines count={3} />
@@ -419,19 +392,24 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
                   <MathRenderer text={item.prompt} />
                 </div>
                 {isPractice ? (
-                  <textarea
-                    rows={2}
-                    disabled={isLocked}
-                    value={answers.q3[item.label] ?? ''}
-                    onChange={(e) =>
-                      onChangeAnswers((prev) => ({
-                        ...prev,
-                        q3: { ...prev.q3, [item.label]: e.target.value },
-                      }))
-                    }
-                    placeholder={`Trả lời ý ${item.label})...`}
-                    className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">
+                      Đáp số {item.label}):
+                    </span>
+                    <input
+                      type="text"
+                      disabled={isLocked}
+                      value={answers.q3[item.label] ?? ''}
+                      onChange={(e) =>
+                        onChangeAnswers((prev) => ({
+                          ...prev,
+                          q3: { ...prev.q3, [item.label]: e.target.value },
+                        }))
+                      }
+                      placeholder={`Nhập đáp số ý ${item.label})...`}
+                      className="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </div>
                 ) : isWorksheet ? (
                   <DottedLines count={2} />
                 ) : (
@@ -464,36 +442,20 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
           {exam.essay.q4.svg && <MathSvg svg={exam.essay.q4.svg} />}
 
           <div className="rounded-xl border border-slate-300 bg-slate-50/40 p-4 space-y-2.5">
-            <div className="text-center font-bold underline underline-offset-4 text-slate-900">
-              Bài giải
-            </div>
-
             {isPractice ? (
-              <>
-                <textarea
-                  rows={5}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-sm font-bold text-slate-800 whitespace-nowrap">Đáp số:</span>
+                <input
+                  type="text"
                   disabled={isLocked}
-                  value={answers.q4Work}
+                  value={answers.q4Answer}
                   onChange={(e) =>
-                    onChangeAnswers((prev) => ({ ...prev, q4Work: e.target.value }))
+                    onChangeAnswers((prev) => ({ ...prev, q4Answer: e.target.value }))
                   }
-                  placeholder="Viết lời giải và các phép tính..."
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="Nhập đáp số (VD: 480 kg gạo hoặc 480)..."
+                  className="flex-1 min-w-[220px] rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
-                <div className="flex justify-end items-center gap-2 pt-1">
-                  <span className="text-sm font-bold text-slate-800">Đáp số:</span>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={answers.q4Answer}
-                    onChange={(e) =>
-                      onChangeAnswers((prev) => ({ ...prev, q4Answer: e.target.value }))
-                    }
-                    placeholder="Kết quả kèm đơn vị..."
-                    className="w-60 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
-                </div>
-              </>
+              </div>
             ) : isWorksheet ? (
               <>
                 <DottedLines count={6} />
@@ -535,36 +497,20 @@ export const Grade5ExamView: React.FC<Grade5ExamViewProps> = ({
           {exam.essay.q5.svg && <MathSvg svg={exam.essay.q5.svg} />}
 
           <div className="rounded-xl border border-slate-300 bg-slate-50/40 p-4 space-y-2.5">
-            <div className="font-semibold text-sm text-slate-700">
-              Trình bày cách tìm:
-            </div>
-
             {isPractice ? (
-              <>
-                <textarea
-                  rows={4}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-sm font-bold text-slate-800 whitespace-nowrap">Đáp số:</span>
+                <input
+                  type="text"
                   disabled={isLocked}
-                  value={answers.q5Work}
+                  value={answers.q5Answer}
                   onChange={(e) =>
-                    onChangeAnswers((prev) => ({ ...prev, q5Work: e.target.value }))
+                    onChangeAnswers((prev) => ({ ...prev, q5Answer: e.target.value }))
                   }
-                  placeholder="Trình bày lập luận và phép tính..."
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="Nhập đáp số cuối cùng..."
+                  className="flex-1 min-w-[220px] rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-mono-math focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
-                <div className="flex justify-end items-center gap-2 pt-1">
-                  <span className="text-sm font-bold text-slate-800">Đáp số:</span>
-                  <input
-                    type="text"
-                    disabled={isLocked}
-                    value={answers.q5Answer}
-                    onChange={(e) =>
-                      onChangeAnswers((prev) => ({ ...prev, q5Answer: e.target.value }))
-                    }
-                    placeholder="Nhập đáp số..."
-                    className="w-60 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
-                </div>
-              </>
+              </div>
             ) : isWorksheet ? (
               <>
                 <DottedLines count={4} />
