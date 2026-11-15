@@ -55,14 +55,14 @@ export default function App() {
   const [grade, setGrade] = useState<GradeLevel>(5);
   const [week, setWeek] = useState<number>(1);
   const [level, setLevel] = useState<ExamDifficulty>('standard');
+  const [presetNumber, setPresetNumber] = useState<1 | 2>(1);
   const [mode, setMode] = useState<ViewMode>('practice');
 
   const [savedExams, setSavedExams] = useState<SavedExamRecord[]>(() => getSavedExams());
   const [scoreHistory, setScoreHistory] = useState<ScoreHistoryEntry[]>(() => getScoreHistory());
 
   const [activeRecord, setActiveRecord] = useState<SavedExamRecord | null>(() => {
-    const initial = findLatestExamForConfig(5, 1, 'standard');
-    return initial ?? getPresetExamRecord(5, 1);
+    return getPresetExamRecord(5, 1, 1);
   });
 
   const [grade5Answers, setGrade5Answers] = useState<Grade5StudentAnswers>(() =>
@@ -135,19 +135,26 @@ export default function App() {
     setMode((prev) => (prev === 'answerKey' ? 'practice' : prev));
   };
 
-  // Sync cached exam or built-in preset exam when switching grade/week/level
-  const tryLoadCached = (nextGrade: GradeLevel, nextWeek: number, nextLevel: ExamDifficulty) => {
-    const cached = findLatestExamForConfig(nextGrade, nextWeek, nextLevel);
-    if (cached) {
-      setActiveRecord(cached);
-      resetAttemptState(true);
-    } else if (nextLevel === 'standard') {
-      const preset = getPresetExamRecord(nextGrade, nextWeek);
+  // Sync built-in preset exam (Đề số 1 / Đề số 2) or cached AI exam when switching grade/week/level
+  const tryLoadCached = (
+    nextGrade: GradeLevel,
+    nextWeek: number,
+    nextLevel: ExamDifficulty,
+    nextPreset: 1 | 2 = presetNumber,
+  ) => {
+    if (nextLevel === 'standard') {
+      const preset = getPresetExamRecord(nextGrade, nextWeek, nextPreset);
       setActiveRecord(preset);
       resetAttemptState(Boolean(preset));
     } else {
-      setActiveRecord(null);
-      resetAttemptState(false);
+      const cached = findLatestExamForConfig(nextGrade, nextWeek, nextLevel);
+      if (cached) {
+        setActiveRecord(cached);
+        resetAttemptState(true);
+      } else {
+        setActiveRecord(null);
+        resetAttemptState(false);
+      }
     }
     setErrorMsg(null);
   };
@@ -171,12 +178,12 @@ export default function App() {
     if (nextLevel !== level) {
       setLevel(nextLevel);
     }
-    tryLoadCached(nextGrade, week, nextLevel);
+    tryLoadCached(nextGrade, week, nextLevel, presetNumber);
   };
 
   const handleChangeWeek = (nextWeek: number) => {
     setWeek(nextWeek);
-    tryLoadCached(grade, nextWeek, level);
+    tryLoadCached(grade, nextWeek, level, presetNumber);
   };
 
   const handleChangeLevel = (nextLevel: ExamDifficulty) => {
@@ -184,7 +191,17 @@ export default function App() {
       return;
     }
     setLevel(nextLevel);
-    tryLoadCached(grade, week, nextLevel);
+    tryLoadCached(grade, week, nextLevel, presetNumber);
+  };
+
+  const handleChangePresetNumber = (nextPreset: 1 | 2) => {
+    setPresetNumber(nextPreset);
+    if (level === 'standard') {
+      const preset = getPresetExamRecord(grade, week, nextPreset);
+      setActiveRecord(preset);
+      resetAttemptState(Boolean(preset));
+      setErrorMsg(null);
+    }
   };
 
   const isVariantUnlockedFor = (
@@ -203,7 +220,7 @@ export default function App() {
     }
     if (!variantMode) {
       if (level === 'standard') {
-        const preset = getPresetExamRecord(grade, week);
+        const preset = getPresetExamRecord(grade, week, presetNumber);
         if (preset) {
           setActiveRecord(preset);
           resetAttemptState(true);
@@ -245,7 +262,7 @@ export default function App() {
         payload = JSON.parse(rawText) as { exam?: ExamData; error?: string };
       } catch {
         throw new Error(
-          'Máy chủ AI hiện không khả dụng trên môi trường này. Bạn vẫn có thể luyện toàn bộ 70 đề tạo sẵn (0 lượt API).',
+          'Máy chủ AI hiện không khả dụng trên môi trường này. Bạn vẫn có thể luyện toàn bộ 140 đề tạo sẵn (0 lượt API).',
         );
       }
       if (!response.ok || !payload.exam) {
@@ -347,6 +364,7 @@ export default function App() {
           grade={grade}
           week={week}
           level={level}
+          presetNumber={presetNumber}
           isGenerating={isGenerating}
           savedExams={savedExams}
           scoreHistory={scoreHistory}
@@ -354,6 +372,7 @@ export default function App() {
           onChangeGrade={handleChangeGrade}
           onChangeWeek={handleChangeWeek}
           onChangeLevel={handleChangeLevel}
+          onChangePresetNumber={handleChangePresetNumber}
           onGeneratePrimary={() => generateExam(false)}
           onGenerateVariant={() => generateExam(true)}
           onSelectSavedExam={(rec) => {
@@ -364,8 +383,13 @@ export default function App() {
                 ? 'standard'
                 : rec.level;
             setLevel(nextLevel);
+            if (rec.id.endsWith('-v2')) {
+              setPresetNumber(2);
+            } else if (rec.id.startsWith('preset-')) {
+              setPresetNumber(1);
+            }
             if (nextLevel !== rec.level) {
-              tryLoadCached(rec.grade, rec.week, 'standard');
+              tryLoadCached(rec.grade, rec.week, 'standard', presetNumber);
             } else {
               setActiveRecord(rec);
               resetAttemptState(true);
@@ -377,7 +401,7 @@ export default function App() {
             setSavedExams(next);
             if (activeRecord?.id === id) {
               setActiveRecord(
-                level === 'standard' ? getPresetExamRecord(grade, week) : null,
+                level === 'standard' ? getPresetExamRecord(grade, week, presetNumber) : null,
               );
             }
           }}
@@ -386,7 +410,7 @@ export default function App() {
             setScoreHistory([]);
             if (level === 'advanced') {
               setLevel('standard');
-              tryLoadCached(grade, week, 'standard');
+              tryLoadCached(grade, week, 'standard', presetNumber);
             }
           }}
         />

@@ -59,7 +59,7 @@ export interface G5WeekSpec {
   q5Rubric: string[];
 }
 
-export function buildGrade5Exam(spec: G5WeekSpec): Grade5Exam {
+export function buildGrade5Exam(spec: G5WeekSpec, variantNumber: 1 | 2 = 1): Grade5Exam {
   return {
     grade: 5,
     week: spec.week,
@@ -67,9 +67,13 @@ export function buildGrade5Exam(spec: G5WeekSpec): Grade5Exam {
     title: spec.title,
     subtitle: spec.subtitle,
     timeMinutes: 40,
-    variantLabel: `Đề chuẩn Tuần ${spec.week} (Tạo sẵn)`,
+    variantLabel: `Đề số ${variantNumber} · Tuần ${spec.week} (Tạo sẵn)`,
     multipleChoice: spec.mcqs.map((m, idx) => {
-      const built = buildMcqOptions(m.correct, m.distractors, spec.week * 11 + idx * 3);
+      const built = buildMcqOptions(
+        m.correct,
+        m.distractors,
+        spec.week * 11 + idx * 3 + variantNumber * 7,
+      );
       return {
         id: idx + 1,
         points: 0.5,

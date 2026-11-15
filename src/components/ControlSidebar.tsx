@@ -24,6 +24,7 @@ interface ControlSidebarProps {
   grade: GradeLevel;
   week: number;
   level: ExamDifficulty;
+  presetNumber: 1 | 2;
   isGenerating: boolean;
   savedExams: SavedExamRecord[];
   scoreHistory: ScoreHistoryEntry[];
@@ -31,6 +32,7 @@ interface ControlSidebarProps {
   onChangeGrade: (grade: GradeLevel) => void;
   onChangeWeek: (week: number) => void;
   onChangeLevel: (level: ExamDifficulty) => void;
+  onChangePresetNumber: (preset: 1 | 2) => void;
   onGeneratePrimary: () => void;
   onGenerateVariant: () => void;
   onSelectSavedExam: (record: SavedExamRecord) => void;
@@ -42,6 +44,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
   grade,
   week,
   level,
+  presetNumber,
   isGenerating,
   savedExams,
   scoreHistory,
@@ -49,6 +52,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
   onChangeGrade,
   onChangeWeek,
   onChangeLevel,
+  onChangePresetNumber,
   onGeneratePrimary,
   onGenerateVariant,
   onSelectSavedExam,
@@ -205,6 +209,30 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               </button>
             )}
           </div>
+          {level === 'standard' && (
+            <div className="space-y-1.5 pt-1">
+              <div className="text-xs font-semibold text-slate-600">
+                Bộ đề tuần này (2 đề / tuần)
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                {([1, 2] as const).map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => onChangePresetNumber(num)}
+                    className={`py-2 px-3 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                      presetNumber === num
+                        ? 'bg-white text-sky-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Đề số {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {!isAdvancedUnlocked && (
             <p className="text-[11px] text-slate-500">
               Mức Nâng cao (Khá - Giỏi) sẽ hiển thị sau khi hoàn thành 18 tuần (đã làm {completedWeeksCount}/18 tuần).
@@ -224,7 +252,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               {isGenerating
                 ? 'Đang tạo đề bằng AI...'
                 : level === 'standard'
-                  ? 'Mở đề chuẩn tuần này (Tạo sẵn)'
+                  ? `Mở Đề số ${presetNumber} tuần này (Tạo sẵn)`
                   : 'Tạo đề nâng cao tuần này'}
             </span>
           </button>
@@ -242,8 +270,8 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
           )}
           <p className="text-[11px] leading-relaxed text-slate-500">
             {isVariantUnlocked
-              ? 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Đã mở khóa đầy đủ đề Nâng cao và Sinh đề biến thể mới (AI).'
-              : `Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Nút Sinh đề biến thể mới (AI) sẽ hiển thị sau khi hoàn thành đủ 35 tuần (đã làm ${completedWeeksCount}/35 tuần).`}
+              ? `Đủ 70/70 đề chuẩn SGK tạo sẵn cho Lớp ${grade} (2 đề/tuần, 0 lượt API). Đã mở khóa đầy đủ đề Nâng cao và Sinh đề biến thể mới (AI).`
+              : `Đủ 70/70 đề chuẩn SGK tạo sẵn cho Lớp ${grade} (2 đề/tuần, 0 lượt API). Nút Sinh đề biến thể mới (AI) sẽ hiển thị sau khi hoàn thành đủ 35 tuần (đã làm ${completedWeeksCount}/35 tuần).`}
           </p>
         </div>
       </div>

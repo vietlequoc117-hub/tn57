@@ -62,7 +62,7 @@ export interface G7WeekSpec {
   bai3Rubric: string[];
 }
 
-export function buildGrade7Exam(spec: G7WeekSpec): Grade7Exam {
+export function buildGrade7Exam(spec: G7WeekSpec, variantNumber: 1 | 2 = 1): Grade7Exam {
   return {
     grade: 7,
     week: spec.week,
@@ -70,9 +70,13 @@ export function buildGrade7Exam(spec: G7WeekSpec): Grade7Exam {
     title: spec.title,
     subtitle: spec.subtitle,
     timeMinutes: spec.timeMinutes ?? 45,
-    variantLabel: `Đề chuẩn Tuần ${spec.week} (Tạo sẵn)`,
+    variantLabel: `Đề số ${variantNumber} · Tuần ${spec.week} (Tạo sẵn)`,
     part1MultipleChoice: spec.mcqs.map((m, idx) => {
-      const built = buildMcqOptions(m.correct, m.distractors, spec.week * 13 + idx * 5);
+      const built = buildMcqOptions(
+        m.correct,
+        m.distractors,
+        spec.week * 13 + idx * 5 + variantNumber * 7,
+      );
       return {
         id: idx + 1,
         points: 0.25,
