@@ -544,11 +544,7 @@ export default function App() {
 
               {/* Submit Button Footer in Practice Mode */}
               {mode === 'practice' && !gradingResult && (
-                <div className="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
-                  <p className="text-xs text-slate-500 max-w-lg">
-                    Khi nhấn nộp bài, hệ thống sẽ tự động đối chiếu đáp án và chấm điểm chính xác
-                    toàn bộ bài làm ngay lập tức (không tốn lượt API).
-                  </p>
+                <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-center no-print">
                   <button
                     type="button"
                     disabled={isGrading}
