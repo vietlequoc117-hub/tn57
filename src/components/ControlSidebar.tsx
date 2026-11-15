@@ -6,6 +6,8 @@ import {
   Trash2,
   History,
   FolderOpen,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   getCurriculumForGrade,
@@ -13,8 +15,10 @@ import {
   type ExamDifficulty,
   type GradeLevel,
 } from '../data/curriculum.ts';
+import { getWeekTheory } from '../data/theory/index.ts';
 import type { SavedExamRecord, ScoreHistoryEntry } from '../types/exam.ts';
 import { formatDuration, formatScoreVi } from '../utils/mathFormat.ts';
+import { MathRenderer } from './MathRenderer.tsx';
 
 interface ControlSidebarProps {
   grade: GradeLevel;
@@ -52,8 +56,10 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
   onClearHistory,
 }) => {
   const [sidebarTab, setSidebarTab] = useState<'saved' | 'scores'>('saved');
+  const [showTheory, setShowTheory] = useState<boolean>(true);
   const curriculumList = getCurriculumForGrade(grade);
   const currentWeekInfo = getWeekInfo(grade, week);
+  const weekTheory = getWeekTheory(grade, week);
 
   const savedWeeksForGrade = new Set(
     savedExams.filter((e) => e.grade === grade).map((e) => e.week),
@@ -136,6 +142,32 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
             <p className="mt-1.5 text-[11px] text-slate-500">
               Phạm vi kiến thức: chỉ từ Tuần 1 đến hết Tuần {currentWeekInfo.week}.
             </p>
+
+            {weekTheory.length > 0 && (
+              <div className="mt-2.5 pt-2.5 border-t border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setShowTheory((prev) => !prev)}
+                  className="w-full flex items-center justify-between gap-2 text-left font-semibold text-sky-800 hover:text-sky-900 cursor-pointer"
+                >
+                  <span>Lý thuyết trọng tâm ({weekTheory.length} mục)</span>
+                  {showTheory ? (
+                    <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                </button>
+                {showTheory && (
+                  <div className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-slate-700 max-h-72 overflow-y-auto pr-1">
+                    {weekTheory.map((line, idx) => (
+                      <div key={idx} className="whitespace-pre-wrap">
+                        <MathRenderer text={line} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
