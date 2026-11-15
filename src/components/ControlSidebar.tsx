@@ -67,6 +67,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
     scoreHistory.filter((entry) => entry.grade === grade).map((entry) => entry.week),
   ).size;
   const isAdvancedUnlocked = completedWeeksCount >= 18;
+  const isVariantUnlocked = completedWeeksCount >= 35;
 
   return (
     <aside className="w-full lg:w-[340px] shrink-0 space-y-5 no-print">
@@ -197,19 +198,21 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
             </span>
           </button>
 
-          <button
-            type="button"
-            disabled={isGenerating}
-            onClick={onGenerateVariant}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap"
-          >
-            <RefreshCw className={`w-4 h-4 shrink-0 ${isGenerating ? 'animate-spin' : ''}`} />
-            <span>Sinh đề biến thể mới (AI)</span>
-          </button>
+          {isVariantUnlocked && (
+            <button
+              type="button"
+              disabled={isGenerating}
+              onClick={onGenerateVariant}
+              className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <RefreshCw className={`w-4 h-4 shrink-0 ${isGenerating ? 'animate-spin' : ''}`} />
+              <span>Sinh đề biến thể mới (AI)</span>
+            </button>
+          )}
           <p className="text-[11px] leading-relaxed text-slate-500">
-            {isAdvancedUnlocked
-              ? 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Chỉ gọi AI khi sinh biến thể mới, tạo đề Nâng cao hoặc chấm bài Tự luận có nội dung.'
-              : 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Chỉ gọi AI khi sinh biến thể mới hoặc chấm bài Tự luận có nội dung.'}
+            {isVariantUnlocked
+              ? 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Đã mở khóa đầy đủ đề Nâng cao và Sinh đề biến thể mới (AI).'
+              : `Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Nút Sinh đề biến thể mới (AI) sẽ hiển thị sau khi hoàn thành đủ 35 tuần (đã làm ${completedWeeksCount}/35 tuần).`}
           </p>
         </div>
       </div>

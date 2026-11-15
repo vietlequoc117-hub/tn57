@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Clock,
-  Printer,
   CheckCircle2,
-  FileText,
   PenTool,
   KeyRound,
   Play,
@@ -157,7 +155,20 @@ export default function App() {
     tryLoadCached(grade, week, nextLevel);
   };
 
+  const isVariantUnlockedFor = (
+    targetGrade: GradeLevel,
+    history: ScoreHistoryEntry[],
+  ): boolean => {
+    const completedWeeks = new Set(
+      history.filter((entry) => entry.grade === targetGrade).map((entry) => entry.week),
+    );
+    return completedWeeks.size >= 35;
+  };
+
   const generateExam = async (variantMode: boolean) => {
+    if (variantMode && !isVariantUnlockedFor(grade, scoreHistory)) {
+      return;
+    }
     if (!variantMode) {
       if (level === 'standard') {
         const preset = getPresetExamRecord(grade, week);
@@ -336,15 +347,6 @@ export default function App() {
     }
   };
 
-  const handlePrintWorksheet = () => {
-    if (mode !== 'worksheet') {
-      setMode('worksheet');
-      setTimeout(() => window.print(), 120);
-    } else {
-      window.print();
-    }
-  };
-
   const weekInfo = getWeekInfo(grade, week);
   const exam = activeRecord?.exam ?? null;
   const displayTimeMinutes = exam ? (exam.grade === 5 ? 40 : exam.timeMinutes) : 40;
@@ -361,7 +363,7 @@ export default function App() {
             Toán Kết Nối · Đề Theo Tuần
           </a>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          <nav className="flex items-center gap-4 sm:gap-6 text-sm font-medium text-slate-600 overflow-x-auto">
             <button
               type="button"
               onClick={() => handleChangeGrade(5)}
@@ -383,7 +385,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setMode('practice')}
-              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`hidden sm:inline-block hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                 mode === 'practice' ? 'text-sky-700 font-semibold' : ''
               }`}
             >
@@ -401,18 +403,6 @@ export default function App() {
               </button>
             )}
           </nav>
-
-          <div className="flex items-center shrink-0">
-            <button
-              type="button"
-              onClick={handlePrintWorksheet}
-              disabled={!exam}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 rounded-lg hover:bg-sky-700 disabled:opacity-50 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              <Printer className="w-4 h-4 shrink-0" />
-              <span>In / Xuất PDF A4</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -482,18 +472,6 @@ export default function App() {
               >
                 <PenTool className="w-4 h-4 shrink-0" />
                 <span>Làm bài trực tuyến</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('worksheet')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                  mode === 'worksheet'
-                    ? 'bg-white text-sky-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <FileText className="w-4 h-4 shrink-0" />
-                <span>Phiếu bài tập & In PDF</span>
               </button>
               {gradingResult && (
                 <button
@@ -582,8 +560,8 @@ export default function App() {
                   {weekInfo.unit} — {weekInfo.lessons}
                 </p>
                 <p className="text-xs text-slate-500 pt-1">
-                  Mức độ: {level === 'advanced' ? 'Nâng cao (Khá - Giỏi)' : 'Chuẩn SGK'} · Hỗ trợ
-                  chấm bài Tự luận bằng AI và xuất phiếu bài tập A4.
+                  Mức độ: {level === 'advanced' ? 'Nâng cao (Khá - Giỏi)' : 'Chuẩn SGK'} · Chấm
+                  điểm tự động phần Trắc nghiệm và hỗ trợ chấm bài Tự luận bằng AI.
                 </p>
               </div>
               <button
