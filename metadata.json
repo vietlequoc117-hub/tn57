@@ -1,0 +1,8 @@
+{
+  "name": "Hệ thống Tạo & Luyện Đề Toán Theo Tuần (Lớp 5 & Lớp 7 – Kết Nối Tri Thức)",
+  "description": "Ứng dụng tạo đề kiểm tra, phiếu bài tập in chuẩn A4 và chấm điểm AI môn Toán Lớp 5 và Lớp 7 bám sát 35 tuần chương trình Kết nối tri thức với cuộc sống.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
