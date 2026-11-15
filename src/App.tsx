@@ -297,56 +297,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      {/* Top Bar: strict 3-zone contract */}
+      {/* Top Bar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-8">
           <a
             href="#top"
             className="text-base sm:text-lg font-bold tracking-tight text-slate-900 whitespace-nowrap shrink-0"
           >
             Toán Kết Nối · Đề Theo Tuần
           </a>
-
-          <nav className="flex items-center gap-4 sm:gap-6 text-sm font-medium text-slate-600 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => handleChangeGrade(5)}
-              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                grade === 5 ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Lớp 5 (35 tuần)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleChangeGrade(7)}
-              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                grade === 7 ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Lớp 7 (35 tuần)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('practice')}
-              className={`hidden sm:inline-block hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                mode === 'practice' ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Học sinh làm bài
-            </button>
-            {gradingResult && (
-              <button
-                type="button"
-                onClick={() => setMode('answerKey')}
-                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  mode === 'answerKey' ? 'text-sky-700 font-semibold' : ''
-                }`}
-              >
-                Đáp án & Thang điểm
-              </button>
-            )}
-          </nav>
         </div>
       </header>
 

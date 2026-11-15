@@ -6,7 +6,6 @@ import {
   Trash2,
   History,
   FolderOpen,
-  Check,
 } from 'lucide-react';
 import {
   getCurriculumForGrade,
@@ -214,46 +213,6 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               ? 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Đã mở khóa đầy đủ đề Nâng cao và Sinh đề biến thể mới (AI).'
               : `Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Nút Sinh đề biến thể mới (AI) sẽ hiển thị sau khi hoàn thành đủ 35 tuần (đã làm ${completedWeeksCount}/35 tuần).`}
           </p>
-        </div>
-      </div>
-
-      {/* Quick Week Grid (1-35) */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2.5">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-          <span>Chọn nhanh Tuần (Lớp {grade})</span>
-          <span className="text-slate-500 font-normal">
-            Có sẵn 35/35 · AI lưu: {savedWeeksForGrade.size}
-          </span>
-        </div>
-        <div className="grid grid-cols-7 gap-1.5">
-          {curriculumList.map((item) => {
-            const isSelected = item.week === week;
-            const isSaved = savedWeeksForGrade.has(item.week);
-            const isExamWeek = Boolean(item.specialType);
-
-            return (
-              <button
-                key={item.week}
-                type="button"
-                title={`Tuần ${item.week}: ${item.lessons}`}
-                onClick={() => onChangeWeek(item.week)}
-                className={`relative h-8 rounded-lg text-xs font-semibold tabular-nums transition-colors cursor-pointer ${
-                  isSelected
-                    ? 'bg-sky-600 text-white'
-                    : isExamWeek
-                      ? 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
-                      : isSaved
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {item.week}
-                {isSaved && !isSelected && (
-                  <Check className="w-2.5 h-2.5 absolute top-0.5 right-0.5 text-emerald-600" />
-                )}
-              </button>
-            );
-          })}
         </div>
       </div>
 
