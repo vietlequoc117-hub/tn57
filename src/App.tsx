@@ -19,6 +19,7 @@ import {
   type GradeLevel,
   type ViewMode,
 } from './data/curriculum.ts';
+import { getPresetExamRecord } from './data/presets/index.ts';
 import type {
   EssayGradingResponse,
   ExamData,
@@ -61,7 +62,7 @@ export default function App() {
 
   const [activeRecord, setActiveRecord] = useState<SavedExamRecord | null>(() => {
     const initial = findLatestExamForConfig(5, 1, 'standard');
-    return initial ?? null;
+    return initial ?? getPresetExamRecord(5, 1);
   });
 
   const [grade5Answers, setGrade5Answers] = useState<Grade5StudentAnswers>(() =>
@@ -101,14 +102,19 @@ export default function App() {
     setGradingResult(null);
     setElapsedSeconds(0);
     setTimerRunning(startTimer);
+    setMode((prev) => (prev === 'answerKey' ? 'practice' : prev));
   };
 
-  // Sync cached exam when switching grade/week/level if one already exists
+  // Sync cached exam or built-in preset exam when switching grade/week/level
   const tryLoadCached = (nextGrade: GradeLevel, nextWeek: number, nextLevel: ExamDifficulty) => {
     const cached = findLatestExamForConfig(nextGrade, nextWeek, nextLevel);
     if (cached) {
       setActiveRecord(cached);
       resetAttemptState(true);
+    } else if (nextLevel === 'standard') {
+      const preset = getPresetExamRecord(nextGrade, nextWeek);
+      setActiveRecord(preset);
+      resetAttemptState(Boolean(preset));
     } else {
       setActiveRecord(null);
       resetAttemptState(false);
@@ -116,9 +122,26 @@ export default function App() {
     setErrorMsg(null);
   };
 
+  const isAdvancedUnlockedFor = (
+    targetGrade: GradeLevel,
+    history: ScoreHistoryEntry[],
+  ): boolean => {
+    const completedWeeks = new Set(
+      history.filter((entry) => entry.grade === targetGrade).map((entry) => entry.week),
+    );
+    return completedWeeks.size >= 18;
+  };
+
   const handleChangeGrade = (nextGrade: GradeLevel) => {
     setGrade(nextGrade);
-    tryLoadCached(nextGrade, week, level);
+    const nextLevel: ExamDifficulty =
+      level === 'advanced' && !isAdvancedUnlockedFor(nextGrade, scoreHistory)
+        ? 'standard'
+        : level;
+    if (nextLevel !== level) {
+      setLevel(nextLevel);
+    }
+    tryLoadCached(nextGrade, week, nextLevel);
   };
 
   const handleChangeWeek = (nextWeek: number) => {
@@ -127,16 +150,24 @@ export default function App() {
   };
 
   const handleChangeLevel = (nextLevel: ExamDifficulty) => {
+    if (nextLevel === 'advanced' && !isAdvancedUnlockedFor(grade, scoreHistory)) {
+      return;
+    }
     setLevel(nextLevel);
     tryLoadCached(grade, week, nextLevel);
   };
 
   const generateExam = async (variantMode: boolean) => {
-    // If primary generation is clicked and a cached exam exists for this exact config,
-    // allow user to either restore immediately; if activeRecord is already showing that cached exam,
-    // generate fresh or tell user. Here: if !variantMode and cached exists and not currently active, load it!
-    // If already active or none cached, call API.
     if (!variantMode) {
+      if (level === 'standard') {
+        const preset = getPresetExamRecord(grade, week);
+        if (preset) {
+          setActiveRecord(preset);
+          resetAttemptState(true);
+          setErrorMsg(null);
+          return;
+        }
+      }
       const cached = findLatestExamForConfig(grade, week, level);
       if (cached && activeRecord?.id !== cached.id) {
         setActiveRecord(cached);
@@ -194,18 +225,75 @@ export default function App() {
           ? gradeGrade5Objective(exam, grade5Answers)
           : gradeGrade7Objective(exam, grade7Answers);
 
-      const response = await fetch('/api/grade-essay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exam,
-          studentAnswers: exam.grade === 5 ? grade5Answers : grade7Answers,
-        }),
-      });
+      const hasAnyEssayInput =
+        exam.grade === 5
+          ? [
+              ...Object.values(grade5Answers.q2aWork),
+              ...Object.values(grade5Answers.q2aResult),
+              ...Object.values(grade5Answers.q2bWork),
+              ...Object.values(grade5Answers.q2bResult),
+              grade5Answers.q3.a,
+              grade5Answers.q3.b,
+              grade5Answers.q4Work,
+              grade5Answers.q4Answer,
+              grade5Answers.q5Work,
+              grade5Answers.q5Answer,
+            ].some((val) => String(val ?? '').trim().length > 0)
+          : [
+              grade7Answers.bai1Work.a,
+              grade7Answers.bai1Work.b,
+              grade7Answers.bai1Result.a,
+              grade7Answers.bai1Result.b,
+              grade7Answers.bai2Work.a,
+              grade7Answers.bai2Work.b,
+              grade7Answers.bai3Work,
+              ...Object.values(grade7Answers.bai3Conclusions),
+            ].some((val) => String(val ?? '').trim().length > 0);
 
-      const essayResult = (await response.json()) as EssayGradingResponse & { error?: string };
-      if (!response.ok || !Array.isArray(essayResult.items)) {
-        throw new Error(essayResult.error || 'Không thể chấm phần tự luận bằng AI.');
+      let essayResult: EssayGradingResponse;
+
+      if (!hasAnyEssayInput) {
+        essayResult =
+          exam.grade === 5
+            ? {
+                essayEarnedPoints: 0,
+                essayMaxPoints: 5,
+                overallComment:
+                  'Phần tự luận chưa có bài làm nên hệ thống tự động chấm 0 điểm.',
+                items: [
+                  { itemId: 'q2a', title: 'Câu 2a (Đặt tính rồi tính)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'q2b', title: 'Câu 2b (Tính thuận tiện)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'q3', title: 'Câu 3 (Đọc bảng/biểu đồ hoặc quy đổi)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'q4', title: 'Câu 4 (Bài toán có lời văn)', earnedPoints: 0, maxPoints: 1.5, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'q5', title: 'Câu 5 (Vận dụng nâng cao)', earnedPoints: 0, maxPoints: 0.5, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                ],
+              }
+            : {
+                essayEarnedPoints: 0,
+                essayMaxPoints: 3,
+                overallComment:
+                  'Phần tự luận chưa có bài làm nên hệ thống tự động chấm 0 điểm.',
+                items: [
+                  { itemId: 'bai1', title: 'Bài 1 (Đại số)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'bai2', title: 'Bài 2 (Hình học / Thống kê)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                  { itemId: 'bai3', title: 'Bài 3 (Vận dụng thực tế)', earnedPoints: 0, maxPoints: 1, isCorrect: false, feedback: 'Chưa nhập bài làm.' },
+                ],
+              };
+      } else {
+        const response = await fetch('/api/grade-essay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exam,
+            studentAnswers: exam.grade === 5 ? grade5Answers : grade7Answers,
+          }),
+        });
+
+        const payload = (await response.json()) as EssayGradingResponse & { error?: string };
+        if (!response.ok || !Array.isArray(payload.items)) {
+          throw new Error(payload.error || 'Không thể chấm phần tự luận bằng AI.');
+        }
+        essayResult = payload;
       }
 
       const totalScore = Math.min(
@@ -301,15 +389,17 @@ export default function App() {
             >
               Học sinh làm bài
             </button>
-            <button
-              type="button"
-              onClick={() => setMode('answerKey')}
-              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                mode === 'answerKey' ? 'text-sky-700 font-semibold' : ''
-              }`}
-            >
-              Đáp án & Thang điểm
-            </button>
+            {gradingResult && (
+              <button
+                type="button"
+                onClick={() => setMode('answerKey')}
+                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  mode === 'answerKey' ? 'text-sky-700 font-semibold' : ''
+                }`}
+              >
+                Đáp án & Thang điểm
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center shrink-0">
@@ -344,21 +434,35 @@ export default function App() {
           onSelectSavedExam={(rec) => {
             setGrade(rec.grade);
             setWeek(rec.week);
-            setLevel(rec.level);
-            setActiveRecord(rec);
-            resetAttemptState(true);
-            setErrorMsg(null);
+            const nextLevel =
+              rec.level === 'advanced' && !isAdvancedUnlockedFor(rec.grade, scoreHistory)
+                ? 'standard'
+                : rec.level;
+            setLevel(nextLevel);
+            if (nextLevel !== rec.level) {
+              tryLoadCached(rec.grade, rec.week, 'standard');
+            } else {
+              setActiveRecord(rec);
+              resetAttemptState(true);
+              setErrorMsg(null);
+            }
           }}
           onDeleteSavedExam={(id) => {
             const next = deleteSavedExam(id);
             setSavedExams(next);
             if (activeRecord?.id === id) {
-              setActiveRecord(null);
+              setActiveRecord(
+                level === 'standard' ? getPresetExamRecord(grade, week) : null,
+              );
             }
           }}
           onClearHistory={() => {
             clearScoreHistory();
             setScoreHistory([]);
+            if (level === 'advanced') {
+              setLevel('standard');
+              tryLoadCached(grade, week, 'standard');
+            }
           }}
         />
 
@@ -391,18 +495,20 @@ export default function App() {
                 <FileText className="w-4 h-4 shrink-0" />
                 <span>Phiếu bài tập & In PDF</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setMode('answerKey')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                  mode === 'answerKey'
-                    ? 'bg-white text-sky-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <KeyRound className="w-4 h-4 shrink-0" />
-                <span>Đáp án & Hướng dẫn chấm</span>
-              </button>
+              {gradingResult && (
+                <button
+                  type="button"
+                  onClick={() => setMode('answerKey')}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                    mode === 'answerKey'
+                      ? 'bg-white text-sky-700 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <KeyRound className="w-4 h-4 shrink-0" />
+                  <span>Đáp án & Hướng dẫn chấm</span>
+                </button>
+              )}
             </div>
 
             {exam && mode === 'practice' && (
@@ -534,13 +640,13 @@ export default function App() {
               )}
 
               {/* Answer Key Quick Grid */}
-              {mode === 'answerKey' && <QuickAnswerKeyTable exam={exam} />}
+              {mode === 'answerKey' && gradingResult && <QuickAnswerKeyTable exam={exam} />}
 
               {/* Exam Body */}
               {exam.grade === 5 ? (
                 <Grade5ExamView
                   exam={exam}
-                  mode={mode}
+                  mode={mode === 'answerKey' && !gradingResult ? 'practice' : mode}
                   answers={grade5Answers}
                   onChangeAnswers={setGrade5Answers}
                   gradingResult={gradingResult}
@@ -548,7 +654,7 @@ export default function App() {
               ) : (
                 <Grade7ExamView
                   exam={exam}
-                  mode={mode}
+                  mode={mode === 'answerKey' && !gradingResult ? 'practice' : mode}
                   answers={grade7Answers}
                   onChangeAnswers={setGrade7Answers}
                   gradingResult={gradingResult}

@@ -63,6 +63,11 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
     (e) => e.grade === grade && e.week === week,
   );
 
+  const completedWeeksCount = new Set(
+    scoreHistory.filter((entry) => entry.grade === grade).map((entry) => entry.week),
+  ).size;
+  const isAdvancedUnlocked = completedWeeksCount >= 18;
+
   return (
     <aside className="w-full lg:w-[340px] shrink-0 space-y-5 no-print">
       {/* Main Configuration Card */}
@@ -138,7 +143,11 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
           <label className="block text-xs font-semibold text-slate-600">
             3. Mức độ đề thi
           </label>
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+          <div
+            className={`grid gap-1.5 p-1 bg-slate-100 rounded-xl ${
+              isAdvancedUnlocked ? 'grid-cols-2' : 'grid-cols-1'
+            }`}
+          >
             <button
               type="button"
               onClick={() => onChangeLevel('standard')}
@@ -150,18 +159,25 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
             >
               Chuẩn SGK
             </button>
-            <button
-              type="button"
-              onClick={() => onChangeLevel('advanced')}
-              className={`py-2 px-2.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                level === 'advanced'
-                  ? 'bg-white text-sky-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Nâng cao (Khá - Giỏi)
-            </button>
+            {isAdvancedUnlocked && (
+              <button
+                type="button"
+                onClick={() => onChangeLevel('advanced')}
+                className={`py-2 px-2.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                  level === 'advanced'
+                    ? 'bg-white text-sky-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Nâng cao (Khá - Giỏi)
+              </button>
+            )}
           </div>
+          {!isAdvancedUnlocked && (
+            <p className="text-[11px] text-slate-500">
+              Mức Nâng cao (Khá - Giỏi) sẽ hiển thị sau khi hoàn thành 18 tuần (đã làm {completedWeeksCount}/18 tuần).
+            </p>
+          )}
         </div>
 
         <div className="space-y-2.5 pt-1">
@@ -172,7 +188,13 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap"
           >
             <Sparkles className="w-4 h-4 shrink-0" />
-            <span>{isGenerating ? 'Đang tạo đề bằng AI...' : 'Tạo đề tuần này'}</span>
+            <span>
+              {isGenerating
+                ? 'Đang tạo đề bằng AI...'
+                : level === 'standard'
+                  ? 'Mở đề chuẩn tuần này (Tạo sẵn)'
+                  : 'Tạo đề nâng cao tuần này'}
+            </span>
           </button>
 
           <button
@@ -182,8 +204,13 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
             className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap"
           >
             <RefreshCw className={`w-4 h-4 shrink-0 ${isGenerating ? 'animate-spin' : ''}`} />
-            <span>Sinh đề biến thể mới</span>
+            <span>Sinh đề biến thể mới (AI)</span>
           </button>
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            {isAdvancedUnlocked
+              ? 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Chỉ gọi AI khi sinh biến thể mới, tạo đề Nâng cao hoặc chấm bài Tự luận có nội dung.'
+              : 'Đủ 35/35 đề chuẩn SGK tạo sẵn (0 lượt API). Chỉ gọi AI khi sinh biến thể mới hoặc chấm bài Tự luận có nội dung.'}
+          </p>
         </div>
       </div>
 
@@ -192,7 +219,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
         <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
           <span>Chọn nhanh Tuần (Lớp {grade})</span>
           <span className="text-slate-500 font-normal">
-            Đã lưu: {savedWeeksForGrade.size}/35
+            Có sẵn 35/35 · AI lưu: {savedWeeksForGrade.size}
           </span>
         </div>
         <div className="grid grid-cols-7 gap-1.5">
