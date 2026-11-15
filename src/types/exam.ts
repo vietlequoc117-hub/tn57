@@ -273,6 +273,8 @@ export interface ScoreHistoryEntry {
   week: number;
   level: ExamDifficulty;
   title: string;
+  studentName?: string;
+  studentClass?: string;
   totalScore: number;
   objectiveScore: number;
   essayScore: number;

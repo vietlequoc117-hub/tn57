@@ -71,6 +71,36 @@ export default function App() {
   const [grade7Answers, setGrade7Answers] = useState<Grade7StudentAnswers>(() =>
     createEmptyGrade7Answers(),
   );
+  const [studentName, setStudentName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('toan_kntt_student_name') ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [studentClass, setStudentClass] = useState<string>(() => {
+    try {
+      return localStorage.getItem('toan_kntt_student_class') ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('toan_kntt_student_name', studentName);
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [studentName]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('toan_kntt_student_class', studentClass);
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [studentClass]);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
@@ -276,6 +306,8 @@ export default function App() {
         week: exam.week,
         level: exam.level,
         title: exam.title,
+        studentName: studentName.trim() || undefined,
+        studentClass: studentClass.trim() || undefined,
         totalScore,
         objectiveScore: objective.objectiveEarnedPoints,
         essayScore: essayResult.essayEarnedPoints,
@@ -503,11 +535,28 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Student Info Row (especially clear in Worksheet & Print mode) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-2.5 text-sm text-slate-700">
-                  <div>Họ và tên: ........................................</div>
-                  <div>Lớp: {exam.grade}........</div>
-                  <div>Điểm số: ............... / 10</div>
+                {/* Student Info Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-2.5 text-sm text-slate-700">
+                  <label className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800 whitespace-nowrap">Họ và tên:</span>
+                    <input
+                      type="text"
+                      value={studentName}
+                      onChange={(e) => setStudentName(e.target.value)}
+                      placeholder="Nhập họ và tên học sinh..."
+                      className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800 whitespace-nowrap">Lớp:</span>
+                    <input
+                      type="text"
+                      value={studentClass}
+                      onChange={(e) => setStudentClass(e.target.value)}
+                      placeholder={`VD: ${exam.grade}A1`}
+                      className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    />
+                  </label>
                 </div>
               </div>
 

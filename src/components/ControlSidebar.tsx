@@ -324,6 +324,13 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
                         {formatScoreVi(entry.totalScore)} / 10 đ
                       </span>
                     </div>
+                    {(entry.studentName || entry.studentClass) && (
+                      <div className="text-[11px] font-medium text-slate-700 truncate">
+                        {[entry.studentName, entry.studentClass ? `Lớp ${entry.studentClass}` : '']
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                    )}
                     <div className="text-slate-500 flex items-center justify-between tabular-nums">
                       <span>
                         {entry.level === 'advanced' ? 'Nâng cao' : 'Chuẩn SGK'} ·{' '}
